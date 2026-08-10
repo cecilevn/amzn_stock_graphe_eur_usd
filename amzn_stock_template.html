@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amazon en dollar et en euro, 1997–2026</title>
+<style>
+  :root{
+    --paper:#EDEDE8; --ink:#14181C; --muted:#6E7570; --rule:#D2D4CB;
+    --usd:#17607A; --eur:#C0562B; --fx:#8A8F86;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 40px}
+  .eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  h1{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    font-weight:600;font-size:clamp(26px,4.4vw,42px);line-height:1.08;margin:0 0 10px;
+    letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--eur)}
+  .sub{max-width:60ch;font-size:15px;line-height:1.55;color:#3B4249;margin:0 0 22px}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:0 0 8px}
+  .key{display:flex;align-items:center;gap:8px;font-size:13px}
+  .swatch{width:22px;height:3px;border-radius:2px;display:inline-block}
+  .readout{margin-left:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .readout b{color:var(--ink);font-weight:600}
+  .chartbox{position:relative;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+    padding:6px 0 0;touch-action:pan-y}
+  canvas{display:block;width:100%}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+  button{font:inherit;font-size:12.5px;padding:6px 12px;border:1px solid var(--rule);
+    background:transparent;color:var(--muted);border-radius:999px;cursor:pointer}
+  button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--usd);outline-offset:2px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;
+    background:var(--rule);border:1px solid var(--rule);margin:28px 0 0}
+  .stat{background:var(--paper);padding:14px 16px}
+  .stat dt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .stat dd{margin:0;font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:24px}
+  .stat dd small{font-size:12px;color:var(--muted);font-family:system-ui,sans-serif;display:block;margin-top:4px}
+  .notes{margin:30px 0 0;font-size:13px;line-height:1.6;color:#3B4249;max-width:72ch}
+  .notes h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    font-family:ui-monospace,monospace;font-weight:500;margin:0 0 10px}
+  .notes li{margin:0 0 7px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Nasdaq : AMZN · 15 mai 1997 → 31 juillet 2026 · 7 348 séances</p>
+  <h1>Amazon en dollar,<br>Amazon <em>en euro</em></h1>
+  <p class="sub">Même action, deux monnaies de compte. Le cours de clôture est converti au taux de change du jour&nbsp;: avant 1999, l'écu&nbsp;; à partir du 4 janvier 1999, l'euro. L'échelle est logarithmique — sans elle, les quinze premières années seraient écrasées sur l'axe.</p>
+
+  <div class="legend">
+    <span class="key"><i class="swatch" style="background:var(--usd)"></i>Cours en dollars</span>
+    <span class="key"><i class="swatch" style="background:var(--eur)"></i>Cours en euros</span>
+    <span class="readout" id="readout"></span>
+  </div>
+
+  <div class="chartbox">
+    <canvas id="cv" aria-label="Graphique du cours d'Amazon en dollars et en euros depuis 1997"></canvas>
+  </div>
+
+  <div class="controls" role="group" aria-label="Période affichée">
+    <button data-range="all" aria-pressed="true">Tout</button>
+    <button data-range="20" aria-pressed="false">20 ans</button>
+    <button data-range="10" aria-pressed="false">10 ans</button>
+    <button data-range="5" aria-pressed="false">5 ans</button>
+    <button data-range="1" aria-pressed="false">1 an</button>
+    <button id="scale" aria-pressed="true" style="margin-left:auto">Échelle log</button>
+  </div>
+
+  <dl class="stats" id="stats"></dl>
+
+  <div class="notes">
+    <h2>Lecture</h2>
+    <ul>
+      <li>Les deux courbes racontent la même entreprise&nbsp;; l'écart entre elles n'est <em>que</em> du change. Il s'est ouvert au maximum en avril 2008 (1&nbsp;€ = 1,60&nbsp;$, l'euro pénalise le porteur européen) et refermé fin 2000 (1&nbsp;€ = 0,83&nbsp;$, le dollar fort le favorise).</li>
+      <li>Cette courbe euro n'est pas la performance nette d'un investisseur français&nbsp;: pas de frais de change, pas de fiscalité, pas de moment d'entrée. Elle isole l'effet mécanique du taux sur un cours converti chaque jour.</li>
+      <li>Cours ajustés des divisions du titre (2&nbsp;:&nbsp;1 en 1998, 3&nbsp;:&nbsp;1 et 2&nbsp;:&nbsp;1 en 1999, 2&nbsp;:&nbsp;1 en 1999, 20&nbsp;:&nbsp;1 en juin 2022). Amazon n'a jamais versé de dividende&nbsp;: cours et performance totale coïncident.</li>
+      <li>Sources&nbsp;: cours quotidiens Yahoo Finance&nbsp;; taux écu/dollar puis euro/dollar, taux de midi certifiés par la Fed de New York (H.10). Le taux de change n'étant publié que les jours ouvrés américains, le dernier taux connu est reporté sur les rares séances sans cotation de change&nbsp;; les cours du 27 au 31 juillet 2026 utilisent le taux du 24 juillet, dernier disponible dans la série.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const base = new Date(DATA.base + "T00:00:00Z");
+const N = DATA.t.length;
+const dates = DATA.t.map(d => new Date(base.getTime() + d*86400000));
+const usd = DATA.usd, eur = DATA.eur, fx = DATA.fx;
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const readout = document.getElementById('readout');
+const C = {usd:'#17607A', eur:'#C0562B', ink:'#14181C', muted:'#6E7570', rule:'#D2D4CB', fxc:'#8A8F86'};
+
+let i0 = 0, i1 = N-1, logScale = true, hover = null;
+let W=0, H=0, PAD={l:52,r:14,t:16,b:26}, fxH=64, gap=18, mainH=0;
+
+const fmt = (v,cur) => (v>=100? v.toFixed(1) : v>=1? v.toFixed(2) : v.toFixed(3)) + (cur==='usd'?' $':' €');
+const fmtDate = d => d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+
+function resize(){
+  const rect = cv.parentElement.getBoundingClientRect();
+  W = rect.width; H = Math.max(320, Math.min(520, Math.round(W*0.56))) + fxH + gap;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = W*dpr; cv.height = H*dpr; cv.style.height = H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  mainH = H - PAD.b - fxH - gap - PAD.t;
+  draw();
+}
+
+function xOf(i){ return PAD.l + (i - i0)/(i1 - i0) * (W - PAD.l - PAD.r); }
+function iAtX(x){ return Math.round(i0 + (x - PAD.l)/(W - PAD.l - PAD.r)*(i1 - i0)); }
+
+function bounds(){
+  let lo=Infinity, hi=-Infinity, flo=Infinity, fhi=-Infinity;
+  for(let i=i0;i<=i1;i++){
+    lo=Math.min(lo,eur[i],usd[i]); hi=Math.max(hi,eur[i],usd[i]);
+    flo=Math.min(flo,fx[i]); fhi=Math.max(fhi,fx[i]);
+  }
+  return {lo,hi,flo,fhi};
+}
+
+function yOf(v,b){
+  const top = PAD.t, h = mainH;
+  if(logScale){
+    const l0=Math.log10(b.lo*0.85), l1=Math.log10(b.hi*1.15);
+    return top + h - (Math.log10(v)-l0)/(l1-l0)*h;
+  }
+  const lo=0, hi=b.hi*1.06;
+  return top + h - (v-lo)/(hi-lo)*h;
+}
+function fxY(v,b){
+  const top = PAD.t + mainH + gap, h = fxH;
+  const lo=b.flo-0.03, hi=b.fhi+0.03;
+  return top + h - (v-lo)/(hi-lo)*h;
+}
+
+function yTicks(b){
+  const out=[];
+  if(logScale){
+    for(let e=-3;e<=3;e++){
+      for(const m of [1,2,5]){
+        const v=m*Math.pow(10,e);
+        if(v>=b.lo*0.85 && v<=b.hi*1.15) out.push(v);
+      }
+    }
+    if(out.length>9) return out.filter(v=>{const s=v/Math.pow(10,Math.floor(Math.log10(v)));return s===1||s===5;});
+    return out;
+  }
+  const step = Math.pow(10,Math.floor(Math.log10(b.hi/5)));
+  const s = (b.hi/5/step>5?10:b.hi/5/step>2?5:2)*step;
+  for(let v=0;v<=b.hi*1.06;v+=s) out.push(v);
+  return out;
+}
+
+function draw(){
+  const b = bounds();
+  ctx.clearRect(0,0,W,H);
+  ctx.font='11px ui-monospace, Menlo, monospace';
+
+  // grille horizontale + labels prix
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(const v of yTicks(b)){
+    const y = yOf(v,b);
+    if(y < PAD.t-2 || y > PAD.t+mainH+2) continue;
+    ctx.strokeStyle=C.rule; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD.l,Math.round(y)+.5); ctx.lineTo(W-PAD.r,Math.round(y)+.5); ctx.stroke();
+    ctx.fillStyle=C.muted;
+    ctx.fillText(v>=1? v.toLocaleString('fr-FR') : v.toString().replace('.',','), PAD.l-8, y);
+  }
+
+  // repères d'années
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const span = (dates[i1]-dates[i0])/31557600000;
+  const stepY = span>24?5:span>12?2:span>4?1:0;
+  let lastLabel=-1e9;
+  for(let i=i0+1;i<=i1;i++){
+    if(dates[i].getUTCFullYear()!==dates[i-1].getUTCFullYear()){
+      const yr=dates[i].getUTCFullYear();
+      const x=xOf(i);
+      if(stepY===0 || yr%stepY===0){
+        ctx.strokeStyle=C.rule; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(Math.round(x)+.5,PAD.t); ctx.lineTo(Math.round(x)+.5,PAD.t+mainH); ctx.stroke();
+        if(x-lastLabel>44){ ctx.fillStyle=C.muted; ctx.fillText(yr, x, PAD.t+mainH+7); lastLabel=x; }
+      }
+    }
+  }
+  if(stepY>0 && span<=4){
+    // repères mensuels sur les courtes périodes
+  }
+
+  // bande de change
+  const ftop = PAD.t+mainH+gap;
+  ctx.strokeStyle=C.rule; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD.l,ftop+.5); ctx.lineTo(W-PAD.r,ftop+.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.l,ftop+fxH+.5); ctx.lineTo(W-PAD.r,ftop+fxH+.5); ctx.stroke();
+  ctx.beginPath();
+  for(let i=i0;i<=i1;i++){ const x=xOf(i), y=fxY(fx[i],b); i===i0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+  ctx.strokeStyle=C.fxc; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.fillStyle=C.muted; ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText('1 € en dollars', PAD.l+4, ftop+5);
+  ctx.textAlign='right';
+  ctx.fillText(b.fhi.toFixed(2).replace('.',','), W-PAD.r-4, ftop+5);
+  ctx.textBaseline='bottom';
+  ctx.fillText(b.flo.toFixed(2).replace('.',','), W-PAD.r-4, ftop+fxH-4);
+
+  // courbes
+  for(const [arr,col] of [[usd,C.usd],[eur,C.eur]]){
+    ctx.beginPath();
+    for(let i=i0;i<=i1;i++){ const x=xOf(i), y=yOf(arr[i],b); i===i0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+    ctx.strokeStyle=col; ctx.lineWidth=1.6; ctx.lineJoin='round'; ctx.stroke();
+  }
+
+  // curseur
+  if(hover!==null && hover>=i0 && hover<=i1){
+    const x=xOf(hover);
+    ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(Math.round(x)+.5,PAD.t); ctx.lineTo(Math.round(x)+.5,ftop+fxH); ctx.stroke();
+    ctx.setLineDash([]);
+    for(const [arr,col] of [[usd,C.usd],[eur,C.eur]]){
+      ctx.beginPath(); ctx.arc(x,yOf(arr[hover],b),3.2,0,7); ctx.fillStyle=col; ctx.fill();
+      ctx.strokeStyle='#EDEDE8'; ctx.lineWidth=1.4; ctx.stroke();
+    }
+  }
+  updateReadout();
+}
+
+function updateReadout(){
+  const i = hover!==null? hover : i1;
+  readout.innerHTML = fmtDate(dates[i]) + ' — <b>' + fmt(usd[i],'usd') + '</b> · <b>' + fmt(eur[i],'eur') +
+    '</b> · 1 € = ' + fx[i].toFixed(4).replace('.',',') + ' $';
+}
+
+function setRange(key){
+  if(key==='all'){ i0=0; }
+  else {
+    const years=+key, end=dates[N-1];
+    const cut=new Date(Date.UTC(end.getUTCFullYear()-years,end.getUTCMonth(),end.getUTCDate()));
+    let k=0; while(k<N-2 && dates[k]<cut) k++;
+    i0=k;
+  }
+  i1=N-1; hover=null; draw(); renderStats();
+}
+
+function renderStats(){
+  const a=i0, z=i1;
+  const yrs=(dates[z]-dates[a])/31557600000;
+  const mU=usd[z]/usd[a], mE=eur[z]/eur[a];
+  const cU=Math.pow(mU,1/yrs)-1, cE=Math.pow(mE,1/yrs)-1;
+  const pct = v => (v*100).toFixed(1).replace('.',',')+' %';
+  const mult = v => '×'+ (v>=100? Math.round(v).toLocaleString('fr-FR') : v.toFixed(1).replace('.',','));
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><dt>Multiple en dollars</dt><dd>${mult(mU)}<small>${fmt(usd[a],'usd')} → ${fmt(usd[z],'usd')}</small></dd></div>
+    <div class="stat"><dt>Multiple en euros</dt><dd>${mult(mE)}<small>${fmt(eur[a],'eur')} → ${fmt(eur[z],'eur')}</small></dd></div>
+    <div class="stat"><dt>TCAM en dollars</dt><dd>${pct(cU)}<small>sur ${yrs.toFixed(1).replace('.',',')} ans</small></dd></div>
+    <div class="stat"><dt>TCAM en euros</dt><dd>${pct(cE)}<small>écart de change : ${((cE-cU)*10000).toFixed(0)} pb par an</small></dd></div>`;
+}
+
+cv.addEventListener('pointermove', e=>{
+  const r=cv.getBoundingClientRect();
+  const i=iAtX(e.clientX-r.left);
+  hover = (i>=i0 && i<=i1)? i : null;
+  draw();
+});
+cv.addEventListener('pointerleave', ()=>{ hover=null; draw(); });
+
+document.querySelectorAll('[data-range]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-range]').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    setRange(btn.dataset.range);
+  });
+});
+const sc=document.getElementById('scale');
+sc.addEventListener('click', ()=>{
+  logScale=!logScale;
+  sc.setAttribute('aria-pressed', logScale?'true':'false');
+  sc.textContent = logScale? 'Échelle log' : 'Échelle linéaire';
+  draw();
+});
+
+window.addEventListener('resize', resize);
+resize(); renderStats();
+</script>
+</body>
+</html>
