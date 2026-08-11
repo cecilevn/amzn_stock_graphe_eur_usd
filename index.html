@@ -66,12 +66,12 @@
   </div>
 
   <div class="controls" role="group" aria-label="Période affichée">
-    <button data-range="all" aria-pressed="true">Tout</button>
+    <button data-range="all" aria-pressed="false">Tout</button>
     <button data-range="20" aria-pressed="false">20 ans</button>
     <button data-range="10" aria-pressed="false">10 ans</button>
     <button data-range="5" aria-pressed="false">5 ans</button>
-    <button data-range="1" aria-pressed="false">1 an</button>
-    <button id="scale" aria-pressed="true" style="margin-left:auto">Échelle log</button>
+    <button data-range="1" aria-pressed="true">1 an</button>
+    <button id="scale" aria-pressed="false" style="margin-left:auto">Échelle linéaire</button>
   </div>
 
   <dl class="stats" id="stats"></dl>
@@ -100,7 +100,7 @@ const ctx = cv.getContext('2d');
 const readout = document.getElementById('readout');
 const C = {usd:'#17607A', eur:'#C0562B', ink:'#14181C', muted:'#6E7570', rule:'#D2D4CB', fxc:'#8A8F86'};
 
-let i0 = 0, i1 = N-1, logScale = true, hover = null;
+let i0 = 0, i1 = N-1, logScale = false, hover = null;
 let W=0, H=0, PAD={l:52,r:14,t:16,b:26}, fxH=64, gap=18, mainH=0;
 
 const fmt = (v,cur) => (v>=100? v.toFixed(1) : v>=1? v.toFixed(2) : v.toFixed(3)) + (cur==='usd'?' $':' €');
@@ -288,7 +288,7 @@ sc.addEventListener('click', ()=>{
 });
 
 window.addEventListener('resize', resize);
-resize(); renderStats();
+resize(); setRange('1');
 </script>
 </body>
 </html>
