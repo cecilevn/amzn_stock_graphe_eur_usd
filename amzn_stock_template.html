@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Amazon en dollar et en euro, 1997–2026</title>
+<title>Amazon in dollars and euros, 1997–2026</title>
 <style>
   :root{
     --paper:#EDEDE8; --ink:#14181C; --muted:#6E7570; --rule:#D2D4CB;
@@ -51,39 +51,39 @@
 </head>
 <body>
 <div class="wrap">
-  <p class="eyebrow">Nasdaq : AMZN · __PERIOD__</p>
-  <h1>Amazon en dollar,<br>Amazon <em>en euro</em></h1>
-  <p class="sub">Même action, deux monnaies de compte. Le cours de clôture est converti au taux de change du jour&nbsp;: avant 1999, l'écu&nbsp;; à partir du 4 janvier 1999, l'euro. L'échelle est logarithmique — sans elle, les quinze premières années seraient écrasées sur l'axe.</p>
+  <p class="eyebrow">Nasdaq: AMZN · since its 1997 IPO</p>
+  <h1>Amazon in dollars,<br>Amazon <em>in euros</em></h1>
+  <p class="sub">Same stock, two currencies. The closing price converted at the real exchange rate each day — what a European investor would actually see.</p>
 
   <div class="legend">
-    <span class="key"><i class="swatch" style="background:var(--usd)"></i>Cours en dollars</span>
-    <span class="key"><i class="swatch" style="background:var(--eur)"></i>Cours en euros</span>
+    <span class="key"><i class="swatch" style="background:var(--usd)"></i>Price in dollars</span>
+    <span class="key"><i class="swatch" style="background:var(--eur)"></i>Price in euros</span>
     <span class="readout" id="readout"></span>
   </div>
 
   <div class="chartbox">
-    <canvas id="cv" aria-label="Graphique du cours d'Amazon en dollars et en euros depuis 1997"></canvas>
+    <canvas id="cv" aria-label="Chart of Amazon's stock price in dollars and euros since 1997"></canvas>
   </div>
 
-  <div class="controls" role="group" aria-label="Période affichée">
-    <button data-range="all" aria-pressed="false">Tout</button>
-    <button data-range="20" aria-pressed="false">20 ans</button>
-    <button data-range="10" aria-pressed="false">10 ans</button>
-    <button data-range="5" aria-pressed="false">5 ans</button>
-    <button data-range="1" aria-pressed="true">1 an</button>
-    <button id="scale" aria-pressed="false" style="margin-left:auto">Échelle linéaire</button>
+  <div class="controls" role="group" aria-label="Time range">
+    <button data-range="all" aria-pressed="false">All</button>
+    <button data-range="20" aria-pressed="false">20y</button>
+    <button data-range="10" aria-pressed="false">10y</button>
+    <button data-range="5" aria-pressed="false">5y</button>
+    <button data-range="1" aria-pressed="true">1y</button>
+    <button id="scale" aria-pressed="false" style="margin-left:auto">Linear scale</button>
   </div>
 
   <dl class="stats" id="stats"></dl>
 
   <div class="notes">
-    <h2>Lecture</h2>
+    <h2>How to read this</h2>
     <ul>
-      <li>Les deux courbes racontent la même entreprise&nbsp;; l'écart entre elles n'est <em>que</em> du change. Il s'est ouvert au maximum en avril 2008 (1&nbsp;€ = 1,60&nbsp;$, l'euro pénalise le porteur européen) et refermé fin 2000 (1&nbsp;€ = 0,83&nbsp;$, le dollar fort le favorise).</li>
-      <li>Cette courbe euro n'est pas la performance nette d'un investisseur français&nbsp;: pas de frais de change, pas de fiscalité, pas de moment d'entrée. Elle isole l'effet mécanique du taux sur un cours converti chaque jour.</li>
-      <li>Cours ajustés des divisions du titre (2&nbsp;:&nbsp;1 en 1998, 3&nbsp;:&nbsp;1 et 2&nbsp;:&nbsp;1 en 1999, 2&nbsp;:&nbsp;1 en 1999, 20&nbsp;:&nbsp;1 en juin 2022). Amazon n'a jamais versé de dividende&nbsp;: cours et performance totale coïncident.</li>
+      <li>Both lines track the same company&nbsp;— the gap between them is entirely currency. It peaked in April 2008 (€1&nbsp;=&nbsp;$1.60, hurting European holders) and narrowed by late 2000 (€1&nbsp;=&nbsp;$0.83, favoring them).</li>
+      <li>The euro line isn't a European investor's actual net return&nbsp;— no FX fees, no taxes, no entry-timing effect. It isolates the mechanical impact of converting the price every day.</li>
+      <li>Prices adjusted for stock splits (2:1 in 1998, 3:1 and 2:1 in 1999, 20:1 in June 2022). Amazon has never paid a dividend, so price and total return are the same.</li>
       <li>__SOURCES_NOTE__</li>
-      <li>Projet personnel, à titre informatif&nbsp;: aucune garantie d'exactitude, ne constitue pas un conseil financier.</li>
+      <li>Personal, informational project&nbsp;— no guarantee of accuracy, not financial advice.</li>
     </ul>
   </div>
 </div>
@@ -103,8 +103,8 @@ const C = {usd:'#17607A', eur:'#C0562B', ink:'#14181C', muted:'#6E7570', rule:'#
 let i0 = 0, i1 = N-1, logScale = false, hover = null;
 let W=0, H=0, PAD={l:52,r:14,t:16,b:26}, fxH=64, gap=18, mainH=0;
 
-const fmt = (v,cur) => (v>=100? v.toFixed(1) : v>=1? v.toFixed(2) : v.toFixed(3)) + (cur==='usd'?' $':' €');
-const fmtDate = d => d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+const fmt = (v,cur) => (cur==='usd'?'$':'€') + (v>=100? v.toFixed(1) : v>=1? v.toFixed(2) : v.toFixed(3));
+const fmtDate = d => d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 
 function resize(){
   const rect = cv.parentElement.getBoundingClientRect();
@@ -166,7 +166,7 @@ function draw(){
   ctx.clearRect(0,0,W,H);
   ctx.font='11px ui-monospace, Menlo, monospace';
 
-  // grille horizontale + labels prix
+  // horizontal grid + price labels
   ctx.textAlign='right'; ctx.textBaseline='middle';
   for(const v of yTicks(b)){
     const y = yOf(v,b);
@@ -174,10 +174,10 @@ function draw(){
     ctx.strokeStyle=C.rule; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(PAD.l,Math.round(y)+.5); ctx.lineTo(W-PAD.r,Math.round(y)+.5); ctx.stroke();
     ctx.fillStyle=C.muted;
-    ctx.fillText(v>=1? v.toLocaleString('fr-FR') : v.toString().replace('.',','), PAD.l-8, y);
+    ctx.fillText(v>=1? v.toLocaleString('en-US') : v.toString(), PAD.l-8, y);
   }
 
-  // repères d'années
+  // year markers
   ctx.textAlign='center'; ctx.textBaseline='top';
   const span = (dates[i1]-dates[i0])/31557600000;
   const stepY = span>24?5:span>12?2:span>4?1:0;
@@ -194,10 +194,10 @@ function draw(){
     }
   }
   if(stepY>0 && span<=4){
-    // repères mensuels sur les courtes périodes
+    // monthly markers on short ranges
   }
 
-  // bande de change
+  // fx band
   const ftop = PAD.t+mainH+gap;
   ctx.strokeStyle=C.rule; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(PAD.l,ftop+.5); ctx.lineTo(W-PAD.r,ftop+.5); ctx.stroke();
@@ -206,20 +206,20 @@ function draw(){
   for(let i=i0;i<=i1;i++){ const x=xOf(i), y=fxY(fx[i],b); i===i0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
   ctx.strokeStyle=C.fxc; ctx.lineWidth=1.2; ctx.stroke();
   ctx.fillStyle=C.muted; ctx.textAlign='left'; ctx.textBaseline='top';
-  ctx.fillText('1 € en dollars', PAD.l+4, ftop+5);
+  ctx.fillText('$ per €', PAD.l+4, ftop+5);
   ctx.textAlign='right';
-  ctx.fillText(b.fhi.toFixed(2).replace('.',','), W-PAD.r-4, ftop+5);
+  ctx.fillText(b.fhi.toFixed(2), W-PAD.r-4, ftop+5);
   ctx.textBaseline='bottom';
-  ctx.fillText(b.flo.toFixed(2).replace('.',','), W-PAD.r-4, ftop+fxH-4);
+  ctx.fillText(b.flo.toFixed(2), W-PAD.r-4, ftop+fxH-4);
 
-  // courbes
+  // price lines
   for(const [arr,col] of [[usd,C.usd],[eur,C.eur]]){
     ctx.beginPath();
     for(let i=i0;i<=i1;i++){ const x=xOf(i), y=yOf(arr[i],b); i===i0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
     ctx.strokeStyle=col; ctx.lineWidth=1.6; ctx.lineJoin='round'; ctx.stroke();
   }
 
-  // curseur
+  // hover cursor
   if(hover!==null && hover>=i0 && hover<=i1){
     const x=xOf(hover);
     ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.setLineDash([2,3]);
@@ -236,7 +236,7 @@ function draw(){
 function updateReadout(){
   const i = hover!==null? hover : i1;
   readout.innerHTML = fmtDate(dates[i]) + ' — <b>' + fmt(usd[i],'usd') + '</b> · <b>' + fmt(eur[i],'eur') +
-    '</b> · 1 € = ' + fx[i].toFixed(4).replace('.',',') + ' $';
+    '</b> · €1 = $' + fx[i].toFixed(4);
 }
 
 function setRange(key){
@@ -255,13 +255,13 @@ function renderStats(){
   const yrs=(dates[z]-dates[a])/31557600000;
   const mU=usd[z]/usd[a], mE=eur[z]/eur[a];
   const cU=Math.pow(mU,1/yrs)-1, cE=Math.pow(mE,1/yrs)-1;
-  const pct = v => (v*100).toFixed(1).replace('.',',')+' %';
-  const mult = v => '×'+ (v>=100? Math.round(v).toLocaleString('fr-FR') : v.toFixed(1).replace('.',','));
+  const pct = v => (v*100).toFixed(1)+'%';
+  const mult = v => '×'+ (v>=100? Math.round(v).toLocaleString('en-US') : v.toFixed(1));
   document.getElementById('stats').innerHTML = `
-    <div class="stat"><dt>Multiple en dollars</dt><dd>${mult(mU)}<small>${fmt(usd[a],'usd')} → ${fmt(usd[z],'usd')}</small></dd></div>
-    <div class="stat"><dt>Multiple en euros</dt><dd>${mult(mE)}<small>${fmt(eur[a],'eur')} → ${fmt(eur[z],'eur')}</small></dd></div>
-    <div class="stat"><dt>TCAM en dollars</dt><dd>${pct(cU)}<small>sur ${yrs.toFixed(1).replace('.',',')} ans</small></dd></div>
-    <div class="stat"><dt>TCAM en euros</dt><dd>${pct(cE)}<small>écart de change : ${((cE-cU)*10000).toFixed(0)} pb par an</small></dd></div>`;
+    <div class="stat"><dt>USD multiple</dt><dd>${mult(mU)}<small>${fmt(usd[a],'usd')} → ${fmt(usd[z],'usd')}</small></dd></div>
+    <div class="stat"><dt>EUR multiple</dt><dd>${mult(mE)}<small>${fmt(eur[a],'eur')} → ${fmt(eur[z],'eur')}</small></dd></div>
+    <div class="stat"><dt>USD CAGR</dt><dd>${pct(cU)}<small>over ${yrs.toFixed(1)}y</small></dd></div>
+    <div class="stat"><dt>EUR CAGR</dt><dd>${pct(cE)}<small>FX drag: ${((cE-cU)*10000).toFixed(0)} bps/yr</small></dd></div>`;
 }
 
 cv.addEventListener('pointermove', e=>{
@@ -283,7 +283,7 @@ const sc=document.getElementById('scale');
 sc.addEventListener('click', ()=>{
   logScale=!logScale;
   sc.setAttribute('aria-pressed', logScale?'true':'false');
-  sc.textContent = logScale? 'Échelle log' : 'Échelle linéaire';
+  sc.textContent = logScale? 'Log scale' : 'Linear scale';
   draw();
 });
 

@@ -1,6 +1,6 @@
 """Build index.html from the template: inject the data JSON and refresh
-the two spots the spec calls out as hardcoded (period line, forward-fill
-footnote)."""
+the sources footnote the spec calls out as hardcoded (which date's rate
+is currently being carried forward, if any)."""
 
 from __future__ import annotations
 
@@ -12,9 +12,9 @@ from pathlib import Path
 from .fx import FxRates
 from .history import HistoryRow
 
-_MONTHS_FR = [
-    "janvier", "février", "mars", "avril", "mai", "juin",
-    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+_MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
 ]
 
 # How far back to look for an active forward-fill streak at the tail of
@@ -29,12 +29,8 @@ def round_sig(value: float, sig: int) -> float:
     return round(value, digits)
 
 
-def format_date_fr(d: date) -> str:
-    return f"{d.day} {_MONTHS_FR[d.month - 1]} {d.year}"
-
-
-def format_count_fr(n: int) -> str:
-    return format(n, ",").replace(",", " ")
+def format_date(d: date) -> str:
+    return f"{d.day} {_MONTHS[d.month - 1]} {d.year}"
 
 
 def build_data_json(rows: list[HistoryRow]) -> str:
@@ -49,18 +45,14 @@ def build_data_json(rows: list[HistoryRow]) -> str:
     return json.dumps(payload, separators=(",", ":"))
 
 
-def build_period_text(rows: list[HistoryRow]) -> str:
-    first, last = rows[0].trade_date, rows[-1].trade_date
-    return f"{format_date_fr(first)} → {format_date_fr(last)} · {format_count_fr(len(rows))} séances"
-
-
 def build_sources_note(rows: list[HistoryRow], fx: FxRates) -> str:
     base_sentence = (
-        "Sources : cours quotidiens Stooq (repli yfinance en cas de panne) ; "
-        "taux écu/dollar de la Fed de New York (H.10) avant 1999, taux de référence "
-        "quotidien euro/dollar de la Banque centrale européenne depuis. Le taux de change "
-        "n'étant publié que les jours ouvrés européens, le dernier taux connu est "
-        "reporté sur les séances sans cotation de change"
+        "Sources: daily prices from Stooq (falls back to Yahoo Finance via "
+        "yfinance on failure); FX rate from the Fed's New York ECU/dollar "
+        "series (H.10) before 1999, the European Central Bank's daily "
+        "euro/dollar reference rate since. The FX rate is only published on "
+        "European business days, so the latest known rate is carried "
+        "forward on sessions without one"
     )
 
     resolved = []
@@ -85,13 +77,13 @@ def build_sources_note(rows: list[HistoryRow], fx: FxRates) -> str:
     block_dates.reverse()
 
     if len(block_dates) == 1:
-        clause = f" ; le cours du {format_date_fr(block_dates[0])} utilise le taux du {format_date_fr(rate_date)}, dernier disponible dans la série."
+        clause = f"; the {format_date(block_dates[0])} price uses the {format_date(rate_date)} rate, the latest available in the series."
     else:
         clause = (
-            f" ; les cours du {format_date_fr(block_dates[0])} au {format_date_fr(block_dates[-1])} "
-            f"utilisent le taux du {format_date_fr(rate_date)}, dernier disponible dans la série."
+            f"; prices from {format_date(block_dates[0])} to {format_date(block_dates[-1])} "
+            f"use the {format_date(rate_date)} rate, the latest available in the series."
         )
-    return base_sentence + clause
+    return base_sentence + " " + clause
 
 
 def render_index_html(template_path: Path, output_path: Path, rows: list[HistoryRow], fx: FxRates) -> None:
@@ -99,7 +91,6 @@ def render_index_html(template_path: Path, output_path: Path, rows: list[History
     html = (
         template
         .replace("__DATA__", build_data_json(rows))
-        .replace("__PERIOD__", build_period_text(rows))
         .replace("__SOURCES_NOTE__", build_sources_note(rows, fx))
     )
     output_path.write_text(html, encoding="utf-8")

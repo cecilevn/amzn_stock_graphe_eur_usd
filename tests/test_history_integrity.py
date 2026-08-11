@@ -77,4 +77,9 @@ def test_append_rows_sorts_new_rows_chronologically(history_copy):
 
 
 def test_read_last_date(history_copy):
-    assert history.read_last_date(history_copy) == date(2026, 7, 31)
+    # Independently derive the expected value instead of hardcoding a date:
+    # the real file keeps growing as the live workflow runs.
+    with history_copy.open(newline="", encoding="utf-8") as f:
+        last_line = f.readlines()[-1]
+    expected = date.fromisoformat(last_line.split(",")[0])
+    assert history.read_last_date(history_copy) == expected
