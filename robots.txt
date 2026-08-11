@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cecilevn.github.io/amzn_stock_graphe_eur_usd/sitemap.xml

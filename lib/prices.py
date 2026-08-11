@@ -49,11 +49,12 @@ def fetch_stooq(since: date) -> list[PriceRow]:
 
 
 def fetch_yfinance(since: date) -> list[PriceRow]:
+    """Raises on a genuine fetch failure. An empty result is not an error —
+    it just means no session newer than `since` is available yet, same as
+    an empty-but-well-formed Stooq response."""
     import yfinance as yf  # lazy import: only needed on fallback
 
     hist = yf.Ticker("AMZN").history(start=since.isoformat(), auto_adjust=True)
-    if hist.empty:
-        raise SourceError("yfinance: empty history")
 
     rows = []
     for ts, record in hist.iterrows():
