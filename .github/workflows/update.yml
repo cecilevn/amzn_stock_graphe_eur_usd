@@ -1,0 +1,57 @@
+name: Update AMZN chart
+
+on:
+  schedule:
+    # Tuesday-Saturday ~23:00 UTC, after the Nasdaq close. GitHub cron is
+    # UTC-only: the offset from Paris time shifts by an hour between DST
+    # and standard time, which is acceptable here.
+    - cron: "0 23 * * 2-6"
+  workflow_dispatch: {}
+
+# Default GITHUB_TOKEN is read-only here on purpose: commits are pushed
+# with a personal access token (see the Commit step) so they count as
+# repository activity. GitHub disables schedule triggers after 60 days
+# of inactivity, and commits from the default token generally don't
+# count toward that.
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CHART_UPDATE_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch new sessions and regenerate the chart
+        id: run_update
+        run: python update.py
+        continue-on-error: true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "amzn-eur-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if [ -n "$(git status --porcelain -- amzn_stock_history.csv index.html)" ]; then
+            git add amzn_stock_history.csv index.html
+            git commit -m "Update AMZN chart data"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Fail the job if the update was stale or errored
+        if: steps.run_update.outcome == 'failure'
+        run: |
+          echo "::error::update.py reported a failure (stale history or a fetch error) — see the 'Fetch new sessions' step log above."
+          exit 1
