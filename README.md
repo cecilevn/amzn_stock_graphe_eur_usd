@@ -4,7 +4,7 @@ A chart of Amazon's stock price since its IPO (1997-05-15), in USD and
 converted to EUR at the rate of the day, updated automatically on trading
 days.
 
-**Live chart:** `https://cecilevn.github.io/amzn_stock_graphe_eur_usd/`
+**Live chart:** [cecilevn.github.io/amzn_stock_graphe_eur_usd](https://cecilevn.github.io/amzn_stock_graphe_eur_usd/)
 
 ## Sources
 
