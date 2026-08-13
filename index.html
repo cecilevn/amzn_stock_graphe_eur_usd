@@ -79,6 +79,7 @@
     <button data-range="5" aria-pressed="false">5y</button>
     <button data-range="1" aria-pressed="true">1y</button>
     <button id="scale" aria-pressed="false" style="margin-left:auto">Linear scale</button>
+    <button id="dl">Download CSV</button>
   </div>
 
   <dl class="stats" id="stats"></dl>
@@ -270,6 +271,23 @@ function renderStats(){
     <div class="stat"><dt>USD CAGR</dt><dd>${pct(cU)}<small>over ${yrs.toFixed(1)}y</small></dd></div>
     <div class="stat"><dt>EUR CAGR</dt><dd>${pct(cE)}<small>FX drag: ${((cE-cU)*10000).toFixed(0)} bps/yr</small></dd></div>`;
 }
+
+function downloadCsv(){
+  const lines = ['date,usd,eur,fx'];
+  for(let i=i0;i<=i1;i++){
+    lines.push(`${dates[i].toISOString().slice(0,10)},${usd[i]},${eur[i]},${fx[i]}`);
+  }
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `amzn-usd-eur_${dates[i0].toISOString().slice(0,10)}_${dates[i1].toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+document.getElementById('dl').addEventListener('click', downloadCsv);
 
 cv.addEventListener('pointermove', e=>{
   const r=cv.getBoundingClientRect();
