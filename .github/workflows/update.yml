@@ -39,6 +39,7 @@ jobs:
         continue-on-error: true
 
       - name: Commit and push if changed
+        if: steps.run_update.outcome == 'success'
         run: |
           git config user.name "amzn-eur-bot"
           git config user.email "actions@users.noreply.github.com"

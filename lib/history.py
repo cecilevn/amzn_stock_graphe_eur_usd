@@ -73,7 +73,7 @@ def append_rows(csv_path: Path, rows: list[HistoryRow]) -> None:
     if not rows:
         return
     with csv_path.open("a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator="\n")
         for row in sorted(rows, key=lambda r: r.trade_date):
             writer.writerow(row.to_csv_fields())
 

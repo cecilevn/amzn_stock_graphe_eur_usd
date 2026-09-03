@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import io
+import math
 from datetime import date
 from typing import NamedTuple
 
@@ -28,6 +29,17 @@ class SourceError(RuntimeError):
     """A price source failed or returned something unusable."""
 
 
+def _reject_non_finite(rows: list[PriceRow], source: str) -> list[PriceRow]:
+    """A source occasionally reports an unsettled session as NaN (seen from
+    yfinance when the latest close hasn't finalized yet). Treat that as a
+    fetch failure rather than writing it to history.csv — the caller falls
+    back to the other source, or surfaces the failure."""
+    for row in rows:
+        if not math.isfinite(row.close_usd):
+            raise SourceError(f"{source}: non-finite close {row.close_usd!r} for {row.trade_date}")
+    return rows
+
+
 def fetch_stooq(since: date) -> list[PriceRow]:
     resp = requests.get(STOOQ_URL, headers={"User-Agent": USER_AGENT}, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
@@ -45,7 +57,7 @@ def fetch_stooq(since: date) -> list[PriceRow]:
         if trade_date > since:
             rows.append(PriceRow(trade_date, float(record["Close"])))
     rows.sort(key=lambda r: r.trade_date)
-    return rows
+    return _reject_non_finite(rows, "stooq")
 
 
 def fetch_yfinance(since: date) -> list[PriceRow]:
@@ -62,7 +74,7 @@ def fetch_yfinance(since: date) -> list[PriceRow]:
         if trade_date > since:
             rows.append(PriceRow(trade_date, round(float(record["Close"]), 6)))
     rows.sort(key=lambda r: r.trade_date)
-    return rows
+    return _reject_non_finite(rows, "yfinance")
 
 
 def fetch_new_prices(since: date) -> tuple[list[PriceRow], str]:
