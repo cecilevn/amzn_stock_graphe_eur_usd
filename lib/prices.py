@@ -1,8 +1,12 @@
 """Fetch AMZN daily closes newer than a given date.
 
-Primary source: Stooq CSV export. Fallback: yfinance, only used when
-Stooq fails outright — never routinely, since yfinance wraps an
-undocumented Yahoo API that breaks a couple of times a year.
+Primary source: Stooq CSV export. Fallbacks, tried in order, only used
+when the previous source fails outright: yfinance (undocumented Yahoo
+API, breaks a couple of times a year), then Nasdaq's own historical
+quote endpoint (also undocumented, same risk class as yfinance — kept
+as a second, independent fallback so one source's outage doesn't stop
+updates while another is down at the same time — see
+amzn_stock_SPEC.md).
 """
 
 from __future__ import annotations
@@ -16,7 +20,14 @@ from typing import NamedTuple
 import requests
 
 STOOQ_URL = "https://stooq.com/q/d/l/?s=amzn.us&i=d"
+NASDAQ_URL = "https://api.nasdaq.com/api/quote/AMZN/historical"
 USER_AGENT = "Mozilla/5.0 (compatible; amzn-eur-updater/1.0; +https://github.com/cecilevn/amzn_stock_graphe_eur_usd)"
+# api.nasdaq.com hangs (soft-blocks, no response until read timeout) on
+# the honest UA above — it only replies to something that looks like a
+# real browser. Confirmed 2026-09-04.
+NASDAQ_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+)
 REQUEST_TIMEOUT = 30
 
 
@@ -77,19 +88,51 @@ def fetch_yfinance(since: date) -> list[PriceRow]:
     return _reject_non_finite(rows, "yfinance")
 
 
+def fetch_nasdaq(since: date) -> list[PriceRow]:
+    resp = requests.get(
+        NASDAQ_URL,
+        params={
+            "assetclass": "stocks",
+            "fromdate": since.isoformat(),
+            "todate": date.today().isoformat(),
+            "limit": "200",
+        },
+        headers={"User-Agent": NASDAQ_USER_AGENT, "Accept": "application/json"},
+        timeout=REQUEST_TIMEOUT,
+    )
+    resp.raise_for_status()
+    try:
+        payload = resp.json()
+        table_rows = payload["data"]["tradesTable"]["rows"] or []
+    except (ValueError, KeyError, TypeError) as exc:
+        raise SourceError(f"nasdaq: unexpected response body: {resp.text[:120]!r}") from exc
+
+    rows = []
+    for record in table_rows:
+        month, day, year = (int(p) for p in record["date"].split("/"))
+        trade_date = date(year, month, day)
+        if trade_date > since:
+            close = float(record["close"].lstrip("$").replace(",", ""))
+            rows.append(PriceRow(trade_date, close))
+    rows.sort(key=lambda r: r.trade_date)
+    return _reject_non_finite(rows, "nasdaq")
+
+
 def fetch_new_prices(since: date) -> tuple[list[PriceRow], str]:
     """Return (new rows strictly after `since`, source name used).
 
-    Tries Stooq first. Only falls back to yfinance if Stooq raises —
-    an empty-but-well-formed Stooq response (no new session yet) is not
-    an error and does not trigger the fallback.
+    Tries Stooq first, then yfinance, then Nasdaq. Only advances to the
+    next source if the current one raises — an empty-but-well-formed
+    response (no new session yet) is not an error and does not trigger
+    the fallback.
     """
-    try:
-        return fetch_stooq(since), "stooq"
-    except Exception as stooq_error:
+    errors = {}
+    for source_name, fetch in (("stooq", fetch_stooq), ("yfinance", fetch_yfinance), ("nasdaq", fetch_nasdaq)):
         try:
-            return fetch_yfinance(since), "yfinance"
-        except Exception as yfinance_error:
-            raise SourceError(
-                f"both price sources failed: stooq={stooq_error!r}, yfinance={yfinance_error!r}"
-            ) from yfinance_error
+            return fetch(since), source_name
+        except Exception as error:
+            errors[source_name] = error
+
+    raise SourceError(
+        "all price sources failed: " + ", ".join(f"{name}={error!r}" for name, error in errors.items())
+    ) from errors["nasdaq"]

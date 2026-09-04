@@ -42,8 +42,12 @@ date,close_usd,eur_per_usd,close_eur,fx_source
 ## Sources
 
 **Cours.** Source principale : Stooq, `https://stooq.com/q/d/l/?s=amzn.us&i=d`, CSV complet,
-sans clé ni quota, conditions permissives. Fallback : `yfinance` (API Yahoo non documentée,
-qui casse une à deux fois par an — d'où le fallback plutôt que l'inverse).
+sans clé ni quota, conditions permissives. Fallback 1 : `yfinance` (API Yahoo non documentée,
+qui casse une à deux fois par an — d'où le fallback plutôt que l'inverse). Fallback 2 (depuis
+2026-09-04, suite au blocage anti-bot de Stooq qui a rendu yfinance seul insuffisant) :
+`api.nasdaq.com/api/quote/AMZN/historical` — API non documentée elle aussi, sans clé, mais
+exige un User-Agent de navigateur (sinon la requête reste bloquée sans réponse jusqu'au
+timeout, comportement anti-bot distinct du blocage de Stooq).
 
 **Change.** Banque centrale européenne, `eurofxref-hist.csv` : EUR/USD quotidien officiel
 depuis 1999, un seul fichier, ni clé ni quota. Attention, la BCE publie des **dollars par euro**
